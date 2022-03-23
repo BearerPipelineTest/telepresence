@@ -60,14 +60,12 @@ func (s *state) AgentState() restapi.AgentState {
 	return s
 }
 
-func (s *state) InterceptInfo(ctx context.Context, callerID, path string, headers http.Header) (*restapi.InterceptInfo, error) {
+func (s *state) InterceptInfo(ctx context.Context, callerID, path string, containerPort uint16, headers http.Header) (*restapi.InterceptInfo, error) {
 	for _, is := range s.interceptStates {
-		ii, err := is.interceptInfo(ctx, callerID, path, headers)
-		if err != nil {
-			return nil, err
-		}
-		if ii.Intercepted {
-			return ii, nil
+		for _, ic := range is.config.Intercepts {
+			if containerPort == 0 || containerPort == ic.ContainerPort {
+				return is.interceptInfo(ctx, callerID, path, headers)
+			}
 		}
 	}
 	return &restapi.InterceptInfo{}, nil
